@@ -1,0 +1,187 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Users CRUD API",
+    "version": "1.0.0",
+    "description": "API documentation for the Users CRUD operations"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8778",
+      "description": "Local server"
+    },
+    {
+      "url": "https://users-apis.onrender.com",
+      "description": "Render Production Server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "age": {
+            "type": "integer"
+          },
+          "hobbies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "city": {
+            "type": "string",
+            "enum": [
+              "Mumbai",
+              "Delhi",
+              "Pune",
+              "Bangalore",
+              "Chennai",
+              "Kolkata",
+              "Ahmedabad",
+              "Surat",
+              "Jaipur"
+            ]
+          },
+          "userProfileImage": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "public_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/user/users": {
+      "post": {
+        "summary": "Create a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "age": { "type": "integer" },
+                  "hobbies": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "city": { "type": "string" },
+                  "userProfileImage": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": ["firstName", "lastName", "age", "city"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get all users",
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/User" }
+                    },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/user/users/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": { "type": "string" }
+        }
+      ],
+      "get": {
+        "summary": "Get user by ID",
+        "responses": {
+          "200": {
+            "description": "User details"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": { "type": "string" },
+                  "lastName": { "type": "string" },
+                  "age": { "type": "integer" },
+                  "hobbies": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "city": { "type": "string" },
+                  "userProfileImage": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user",
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          }
+        }
+      }
+    }
+  }
+}
