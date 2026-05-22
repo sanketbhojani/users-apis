@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
-// API Base URL
 const API_URL = 'https://users-apis.onrender.com/api/user/users';
 
 function App() {
@@ -11,17 +10,17 @@ function App() {
   const [toastMessage, setToastMessage] = useState('');
   const [editingUserId, setEditingUserId] = useState(null);
   
-  // Form State
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     age: '',
     city: '',
-    hobbies: ''
+    hobbies: []
   });
   const [profileImage, setProfileImage] = useState(null);
 
-  // Fetch users on mount
+  const availableHobbies = ["Cricket", "Coding", "Reading", "Listening"];
+
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -45,6 +44,17 @@ function App() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleCheckboxChange = (hobby) => {
+    setFormData(prev => {
+      const hobbies = [...prev.hobbies];
+      if (hobbies.includes(hobby)) {
+        return { ...prev, hobbies: hobbies.filter(h => h !== hobby) };
+      } else {
+        return { ...prev, hobbies: [...hobbies, hobby] };
+      }
+    });
+  };
+
   const handleFileChange = (e) => {
     setProfileImage(e.target.files[0]);
   };
@@ -60,11 +70,12 @@ function App() {
       lastName: '',
       age: '',
       city: '',
-      hobbies: ''
+      hobbies: []
     });
     setProfileImage(null);
     setEditingUserId(null);
-    document.getElementById('userProfileImage').value = '';
+    const fileInput = document.getElementById('userProfileImage');
+    if (fileInput) fileInput.value = '';
   };
 
   const handleEdit = (user) => {
@@ -74,9 +85,8 @@ function App() {
       lastName: user.lastName,
       age: user.age,
       city: user.city,
-      hobbies: user.hobbies ? user.hobbies.join(', ') : ''
+      hobbies: user.hobbies || []
     });
-    // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -105,7 +115,7 @@ function App() {
     submitData.append('lastName', formData.lastName);
     submitData.append('age', formData.age);
     submitData.append('city', formData.city);
-    submitData.append('hobbies', formData.hobbies);
+    submitData.append('hobbies', JSON.stringify(formData.hobbies)); // Send as JSON string for backend
     
     if (profileImage) {
       submitData.append('userProfileImage', profileImage);
@@ -113,7 +123,6 @@ function App() {
 
     try {
       if (editingUserId) {
-        // Update user
         const res = await axios.put(`${API_URL}/${editingUserId}`, submitData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
@@ -123,7 +132,6 @@ function App() {
           fetchUsers();
         }
       } else {
-        // Add new user
         const res = await axios.post(API_URL, submitData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
@@ -142,174 +150,163 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Background elements */}
-      <div className="background-blobs">
-        <div className="blob blob-1"></div>
-        <div className="blob blob-2"></div>
-        <div className="blob blob-3"></div>
+      {/* Form Card */}
+      <div className="card">
+        <h2>Student Form</h2>
+        <form onSubmit={handleSubmit} className="form-grid">
+          
+          <div className="input-group">
+            <label>First Name</label>
+            <input 
+              type="text" 
+              name="firstName" 
+              value={formData.firstName} 
+              onChange={handleInputChange} 
+              required 
+              placeholder="Enter first name" 
+            />
+          </div>
+          
+          <div className="input-group">
+            <label>Last Name</label>
+            <input 
+              type="text" 
+              name="lastName" 
+              value={formData.lastName} 
+              onChange={handleInputChange} 
+              required 
+              placeholder="Enter last name" 
+            />
+          </div>
+
+          <div className="input-group full-width">
+            <label>Hobbies</label>
+            <div className="checkbox-group">
+              {availableHobbies.map(hobby => (
+                <label key={hobby} className="checkbox-item">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.hobbies.includes(hobby)} 
+                    onChange={() => handleCheckboxChange(hobby)} 
+                  />
+                  {hobby}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label>City</label>
+            <select name="city" value={formData.city} onChange={handleInputChange} required>
+              <option value="" disabled>Select a City</option>
+              <option value="Mumbai">Mumbai</option>
+              <option value="Delhi">Delhi</option>
+              <option value="Pune">Pune</option>
+              <option value="Bangalore">Bangalore</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Kolkata">Kolkata</option>
+              <option value="Ahmedabad">Ahmedabad</option>
+              <option value="Surat">Surat</option>
+              <option value="Jaipur">Jaipur</option>
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label>Age</label>
+            <input 
+              type="number" 
+              name="age" 
+              value={formData.age} 
+              onChange={handleInputChange} 
+              required 
+              min="1" 
+              placeholder="Enter age" 
+            />
+          </div>
+
+          <div className="input-group full-width">
+            <label>Profile Image (Optional)</label>
+            <input 
+              type="file" 
+              id="userProfileImage" 
+              name="userProfileImage" 
+              onChange={handleFileChange} 
+              accept="image/*" 
+            />
+          </div>
+
+          <div className="submit-btn-container">
+            <button type="submit" className="btn-primary" disabled={submitting}>
+              {submitting ? 'Saving...' : 'Submit'}
+            </button>
+            {editingUserId && (
+              <button type="button" className="btn-secondary" onClick={resetForm} disabled={submitting}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
       </div>
 
-      <header className="glass-header">
-        <h1>User Management Hub</h1>
-        <p>Live connected to: {API_URL}</p>
-      </header>
-
-      <main className="dashboard-grid">
-        {/* Form Section */}
-        <section className="glass-card form-section">
-          <h2>{editingUserId ? 'Edit User' : 'Add New User'}</h2>
-          
-          <form onSubmit={handleSubmit} id="user-form">
-            <div className="input-group">
-              <label>First Name</label>
-              <input 
-                type="text" 
-                name="firstName" 
-                value={formData.firstName} 
-                onChange={handleInputChange} 
-                required 
-                placeholder="e.g. John" 
-              />
-            </div>
-            
-            <div className="input-group">
-              <label>Last Name</label>
-              <input 
-                type="text" 
-                name="lastName" 
-                value={formData.lastName} 
-                onChange={handleInputChange} 
-                required 
-                placeholder="e.g. Doe" 
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Age</label>
-              <input 
-                type="number" 
-                name="age" 
-                value={formData.age} 
-                onChange={handleInputChange} 
-                required 
-                min="1" 
-                placeholder="e.g. 25" 
-              />
-            </div>
-
-            <div className="input-group">
-              <label>City</label>
-              <select name="city" value={formData.city} onChange={handleInputChange} required>
-                <option value="" disabled>Select a City</option>
-                <option value="Mumbai">Mumbai</option>
-                <option value="Delhi">Delhi</option>
-                <option value="Pune">Pune</option>
-                <option value="Bangalore">Bangalore</option>
-                <option value="Chennai">Chennai</option>
-                <option value="Kolkata">Kolkata</option>
-                <option value="Ahmedabad">Ahmedabad</option>
-                <option value="Surat">Surat</option>
-                <option value="Jaipur">Jaipur</option>
-              </select>
-            </div>
-
-            <div className="input-group">
-              <label>Hobbies (comma-separated)</label>
-              <input 
-                type="text" 
-                name="hobbies" 
-                value={formData.hobbies} 
-                onChange={handleInputChange} 
-                placeholder="e.g. Reading, Cricket" 
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Profile Image {editingUserId && '(Optional)'}</label>
-              <input 
-                type="file" 
-                id="userProfileImage" 
-                name="userProfileImage" 
-                onChange={handleFileChange} 
-                accept="image/*" 
-              />
-            </div>
-
-            <div className="form-actions">
-              <button type="submit" className="btn-primary" disabled={submitting}>
-                {submitting ? 'Saving...' : (editingUserId ? 'Update User' : 'Save User')}
-              </button>
-              {editingUserId && (
-                <button type="button" className="btn-secondary" onClick={resetForm} disabled={submitting}>
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-        </section>
-
-        {/* Table Section */}
-        <section className="glass-card table-section">
-          <h2>Registered Users</h2>
-          
-          {loading ? (
-            <div className="loader-container">
-              <div className="spinner"></div>
-              <p>Fetching users from server...</p>
-            </div>
-          ) : (
-            <div className="table-container">
-              <table>
-                <thead>
+      {/* Table Card */}
+      <div className="card">
+        <h2>Student List</h2>
+        
+        {loading ? (
+          <div className="loader-container">
+            <div className="spinner"></div>
+            <p style={{marginTop: '1rem', color: '#6b7280'}}>Loading...</p>
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>ID</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Hobbies</th>
+                  <th>City</th>
+                  <th>Age</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 ? (
                   <tr>
-                    <th>Profile</th>
-                    <th>Name</th>
-                    <th>Age</th>
-                    <th>City</th>
-                    <th>Hobbies</th>
-                    <th>Actions</th>
+                    <td colSpan="8" style={{ padding: '2rem', color: '#6b7280' }}>
+                      No data found. Add someone to the list!
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {users.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
-                        No users found. Add one to get started!
+                ) : (
+                  users.map(user => (
+                    <tr key={user._id}>
+                      <td>
+                        {user.userProfileImage && user.userProfileImage.url ? (
+                          <img src={user.userProfileImage.url} alt="Profile" className="profile-img" />
+                        ) : (
+                          <div className="no-image">No Img</div>
+                        )}
+                      </td>
+                      <td>{user._id.substring(0, 8)}...</td>
+                      <td>{user.firstName}</td>
+                      <td>{user.lastName}</td>
+                      <td>{user.hobbies ? user.hobbies.join(', ') : ''}</td>
+                      <td>{user.city}</td>
+                      <td>{user.age}</td>
+                      <td>
+                        <button className="btn-edit" onClick={() => handleEdit(user)}>Edit</button>
+                        <button className="btn-delete" onClick={() => handleDelete(user._id)}>Delete</button>
                       </td>
                     </tr>
-                  ) : (
-                    users.map(user => (
-                      <tr key={user._id}>
-                        <td>
-                          {user.userProfileImage && user.userProfileImage.url ? (
-                            <img src={user.userProfileImage.url} alt="Profile" className="profile-img" />
-                          ) : (
-                            <div className="no-image">No Img</div>
-                          )}
-                        </td>
-                        <td>{user.firstName} {user.lastName}</td>
-                        <td>{user.age}</td>
-                        <td>{user.city}</td>
-                        <td>
-                          <div className="hobbies-badges">
-                            {user.hobbies && user.hobbies.map((hobby, index) => (
-                              <span key={index} className="badge">{hobby}</span>
-                            ))}
-                          </div>
-                        </td>
-                        <td>
-                          <button className="btn-edit" onClick={() => handleEdit(user)}>Edit</button>
-                          <button className="btn-danger" onClick={() => handleDelete(user._id)}>Delete</button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </main>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* Toast Notification */}
       <div className={`toast ${toastMessage ? 'show' : ''}`}>
